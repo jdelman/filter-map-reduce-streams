@@ -1,19 +1,33 @@
-const streamz = require('./streamz.js');
+const assert = require('assert');
+const mocha = require('mocha');
+
 const streamify = require('stream-array');
 const JSONStream = require('JSONStream');
 
-const data = [
-  { a: 'b', c: 10 },
-  { a: 'c', c: 20 },
-  { a: 'e', c: 0 },
-  { a: 'f', c: -9 }
-];
+const index = require('../index.js');
 
-const f = datum => datum.c >= 10;
-const m = datum => datum.c;
-const r = (acc, datum) => acc + datum;
+describe('filterMapReduceStream', function() {
+  describe('synchronous', function() {
+    it('should return [30] with this array of objects', function() {
+      const data = [
+        { a: 'b', c: 10 },
+        { a: 'c', c: 20 },
+        { a: 'e', c: 0 },
+        { a: 'f', c: -9 }
+      ];
 
-streamz(streamify(data), f, m, r, 0).pipe(JSONStream.stringify()).pipe(process.stdout);
+      const f = datum => datum.c >= 10;
+      const m = datum => datum.c;
+      const r = (acc, datum) => acc + datum;
 
-// streamify(data).pipe(JSONStream.stringify()).pipe(process.stdout);
-// 
+      const strm = index.filterMapReduceStream(streamify(data), f, m, r, 0).pipe(JSONStream.stringify());
+
+      strm.on('err', err => {
+        throw err;
+      });
+      strm.on('data', datum => {
+        assert.equal(datum[0], 30);
+      });
+    });
+  });
+});
