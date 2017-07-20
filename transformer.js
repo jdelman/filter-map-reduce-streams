@@ -4,7 +4,7 @@ const FILTERED = Symbol.for('filterMapReduceStream/filtered');
 const VALID_TYPES = ['map', 'reduce', 'filter'];
 
 class Transformer extends Transform {
-  constructor(type, func, accumulator, async = false) {
+  constructor(type, func, accumulator, isAsync = false) {
     // initialize the Transform stream into object mode
     super({ objectMode: true });
 
@@ -19,29 +19,58 @@ class Transformer extends Transform {
     this.accumulator = accumulator;
 
     this.func = func;
-    this.async = async;
+    this.isAsync = isAsync;
+  }
+
+  handler(chunk) {
+    return new Promise((resolve, reject) => {
+      const callback = (err, value) => {
+        if (err) return reject(err);
+        return resolve(value);
+      };
+
+      const args = [];
+
+      if (this.type === 'reduce') {
+        args.push(this.accumulator);
+      }
+
+      args.push(chunk, callback);
+
+      const p = this.func(...args);
+      if (p instanceof Promise) {
+        p.then(result => {
+          resolve(result);
+        }).catch(err => {
+          reject(err);
+        });
+      }
+      else if (!this.isAsync) {
+        return resolve(p);
+      }
+    });
   }
 
   _transform(chunk, encoding, cb) {
     if (chunk === FILTERED) return cb();
 
     if (this.type === 'map') {
-      this.push(this.func(chunk));
-      cb();
+      this.handler(chunk).then(value => {
+        this.push(value);
+        cb();
+      });
     }
     else if (this.type === 'filter') {
-      const out = this.func(chunk);
-      if (out) {
-        this.push(chunk);
-      }
-      else {
-        this.push(FILTERED);
-      }
-      cb();
+      this.handler(chunk).then(value => {
+        if (value) this.push(chunk);
+        cb();
+      });
     }
     else if (this.type === 'reduce') {
-      this.accumulator = this.func(this.accumulator, chunk);
-      cb();
+      this.handler(chunk).then(value => {
+        this.accumulator = value;
+        cb();
+      });
     }
   }
 

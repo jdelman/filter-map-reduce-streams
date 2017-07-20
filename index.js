@@ -1,15 +1,15 @@
 const Transformer = require('./transformer');
 
-function filterMapReduceStream(stream, filterFunc, mapFunc, reduceFunc, accumulator) {
-  const filterTransformer = new Transformer('filter', filterFunc);
-  const mapTransformer = new Transformer('map', mapFunc);
-  const reduceTransformer = new Transformer('reduce', reduceFunc, accumulator);
+function filterMapReduceStream(stream, filterFunc, mapFunc, reduceFunc, accumulator, isAsync = false) {
+  const filterTransformer = new Transformer('filter', filterFunc, null, isAsync);
+  const mapTransformer = new Transformer('map', mapFunc, null, isAsync);
+  const reduceTransformer = new Transformer('reduce', reduceFunc, accumulator, isAsync);
 
   return stream.pipe(filterTransformer).pipe(mapTransformer).pipe(reduceTransformer);
 }
 
-function reduceStream(stream, reduceFunc, accumulator) {
-  const reduceTransformer = new Transformer('reduce', reduceFunc, accumulator);
+function reduceStream(stream, reduceFunc, accumulator, isAsync = false) {
+  const reduceTransformer = new Transformer('reduce', reduceFunc, accumulator, isAsync);
   return stream.pipe(reduceTransformer);
 }
 

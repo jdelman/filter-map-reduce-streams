@@ -1,10 +1,10 @@
 {
   "name": "filter-map-reduce-stream",
   "version": "1.0.0",
-  "description": "",
+  "description": "A method for transforming streams using a filter-map-reduce pattern.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test"
   },
   "keywords": ["streams", "mapreduce"],
   "author": "Josh Delman <joshdelman@gmail.com>",
