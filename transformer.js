@@ -4,7 +4,7 @@ const FILTERED = Symbol.for('filterMapReduceStream/filtered');
 const VALID_TYPES = ['map', 'reduce', 'filter'];
 
 class Transformer extends Transform {
-  constructor(type, func, accumulator, isAsync = false) {
+  constructor(type, func, accumulator) {
     // initialize the Transform stream into object mode
     super({ objectMode: true });
 
@@ -19,7 +19,9 @@ class Transformer extends Transform {
     this.accumulator = accumulator;
 
     this.func = func;
-    this.isAsync = isAsync;
+
+    this.isAsync = ((this.type === 'reduce' && this.func.length === 3) ||
+                   (this.type !== 'reduce' && this.func.length === 2));
   }
 
   handler(chunk) {
